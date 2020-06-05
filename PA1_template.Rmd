@@ -8,18 +8,128 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r echo = TRUE}
+      
+      unzip("activity.zip")
+      data  <- read.csv("activity.csv") 
+```
+      
+      
 
 
 ## What is mean total number of steps taken per day?
 
-
+```{r echo=TRUE}
+      library(lubridate)
+      data$date <- as.factor(data$date)
+      t <- tapply(data$steps , data$date , sum , na.rm = TRUE)
+      df <- data.frame(date = ymd(row.names(t)) , total_steps = t)
+      final_data <- subset(df , df$total_steps != 0)
+      hist(final_data$total_steps , xlab = "total steps" , main  = "total steps")
+      mean1 <- mean(final_data$total_steps)
+      median1 <- median(final_data$total_steps)
+     
+      
+```
+      
+####as you can see
+```{r echo = TRUE}
+  print(paste("mean is" , mean1 , "and median is" , median1 , sep =" "  ))
+```
 
 ## What is the average daily activity pattern?
 
+```{r echo = TRUE}
 
+  data$interval <- as.factor(data$interval)
+  u <- tapply(data$steps , data$interval ,mean , na.rm = TRUE)
+  df2 <- data.frame(interval = row.names(u) , av_steps = u)
+  plot(x = df2$interval , y = df2$av_steps , type = "l" , xlab = "interval" , ylab = "average steps" )
+  title("average steps across intervals")
+  max1 <- max(df2$av_steps)
+  max1_interval <- as.numeric(subset(df2 , av_steps == max1)$interval)
+
+```
+#### as you can see
+```{r echo = TRUE}
+  print(paste("the maxinmum average steps is in the interval ", max1_interval ,sep =""))
+```
 
 ## Imputing missing values
 
+```{r echo=TRUE}
+  
+  d <- data
+  
+  for( i in 1:length(data$steps)){
+    if ( is.na(d[i,1])){
+      d[i,1] <- subset(df2 , interval== d[i,3])[1,2]
+    } 
+  }
+
+  d$date <- as.factor(d$date)
+  e <- tapply(d$steps , d$date , sum)
+  df3 <- data.frame(steps = e)
+  hist(df3$steps , xlab = "steps" , ylab = "frequency" , main ="missing values filled" , col = "red")
+  
+  mean2 <- mean(e)
+  median2 <- median(e)
+  
+```
+
+####as you can see
+
+```{r}
+  print(paste("after filling missing values the mean is ",mean2 , " and the median is ",median2 ,sep = " " ))
+```
+
+####The mean remains the same and the median changes 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+
+library(plyr)
+## putting 1 for weekend and 0 weekday
+d <- mutate( d , weekday = ((wday(ymd(date))==1)|(wday(ymd(date))==7))) 
+d$weekday <- as.numeric(d$weekday)
+d$weekday <- as.factor(d$weekday)
+d$interval <-as.factor(d$interval)
+
+d1 <- subset(d,d$weekday == 1)
+d2 <- subset(d,d$weekday ==0 )
+
+d1 <- data.frame(steps = tapply(d1$steps , d1$interval ,mean) , interval = row.names(tapply(d1$steps , d1$interval ,mean)) )
+
+d2 <- data.frame(steps = tapply(d2$steps , d2$interval ,mean) , interval = row.names(tapply(d2$steps , d2$interval ,mean)) )
+
+par(mfcol = c(2,1))
+
+
+plot(d1$interval , d1$steps , col = "blue" , type = "l" , xlab ="interval " ,ylab = "Number of steps" ,sub="weekend")
+plot(d2$interval , d2$steps , col = "blue" , type = "l" , xlab ="interval " ,ylab = "Number of steps" ,sub="weekday")
+
+
+```
+
+#END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
